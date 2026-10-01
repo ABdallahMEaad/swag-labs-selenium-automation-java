@@ -1,0 +1,67 @@
+name: Swag Labs Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run tests (headless Chrome)
+        run: mvn -B clean test -Dheadless=true
+
+      - name: Set up Node (for Allure CLI)
+        if: always()
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          npm install -g allure
+          if [ -d target/allure-results ]; then RESULTS=target/allure-results; else RESULTS=allure-results; fi
+          allure generate "$RESULTS" -o allure-report
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+          if-no-files-found: warn
+
+      - name: Upload raw Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: |
+            allure-results
+            target/allure-results
+          if-no-files-found: ignore
+
+      - name: Publish report to GitHub Pages
+        if: always() && github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-report
