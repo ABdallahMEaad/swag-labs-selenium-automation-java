@@ -62,6 +62,7 @@ public class ProductsPage extends BasePage {
 
     @Step("Visit product")
     public void visitProduct(String productName) {
+        findElement(productNames); // wait until the products page is really loaded
         List<WebElement> products = driver.findElements(productNames);
 
         for (WebElement product : products) {
@@ -137,6 +138,7 @@ public class ProductsPage extends BasePage {
     }
 
     private void clickProductButtons(List<String> names) {
+        findElement(inventoryButtons); // wait until the products page is really loaded
         List<WebElement> buttons = driver.findElements(inventoryButtons);
 
         for (WebElement button : buttons) {
