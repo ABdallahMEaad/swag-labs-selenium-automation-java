@@ -274,7 +274,7 @@ mvn test
 Allure results are generated inside:
 
 ```text
-target/allure-results
+allure-results
 ```
 
 Generate the report:
